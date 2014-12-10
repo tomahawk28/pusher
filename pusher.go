@@ -42,20 +42,17 @@ func (self *Pusher) SetHttps(flag bool) {
 	self.usingHttps = flag
 }
 
-func (self *Pusher) GetChannels() (PusherChannelResponse, error) {
+func (self Pusher) GetChannels() ([]string, error) {
 	var result PusherChannelResponse
 	requestUrl := self.get_Request()
 	requestUrl.Path = fmt.Sprintf("/apps/%d/channels", self.App_id)
-
-	q := requestUrl.Query()
-	requestUrl.RawQuery = q.Encode()
 
 	self.signing_RequestURL(requestUrl)
 
 	resp, err := http.Get(requestUrl.String())
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Http Get Error:", err)
-		return result, err
+		return nil, err
 	}
 	log.Printf("Status Code: %+v", resp.StatusCode)
 
@@ -66,13 +63,19 @@ func (self *Pusher) GetChannels() (PusherChannelResponse, error) {
 
 	if err := json.Unmarshal(contents, &result); err != nil {
 		fmt.Fprintf(os.Stderr, "JSON Unmarshal Error:", err)
-		return result, err
+		return nil, err
 	}
 
-	return result, nil
+	keys := make([]string, len(result.Channels))
+	i := 0
+	for name, _ := range result.Channels {
+		keys[i] = name
+		i = i + 1
+	}
+	return keys, nil
 }
 
-func (self *Pusher) Trigger(channels []string, event string, message interface{}) error {
+func (self Pusher) Trigger(channels []string, event string, message interface{}) error {
 
 	requestUrl := self.get_Request()
 	requestUrl.Path = fmt.Sprintf("/apps/%d/events", self.App_id)
