@@ -28,14 +28,11 @@ func main() {
 	}
 
 	pu.SetHttps(true)
-	pu.Trigger([]string{"test_channel"}, "my_event", &SampleMsg{"Greeting", "Thank you for waiting"})
-
-	if ch, err := pu.GetChannels(); err != nil {
+	
+	if channel_names, err := pu.GetChannels(); err != nil {
 		panic("Die!")
 	} else {
-		for name, _ := range ch.Channels {
-			fmt.Println("Channel name:", name)
-		}
+		pu.Trigger(channel_names, "my_event", &SampleMsg{"Greeting", "Thank you for waiting"})
 	}
 
 }
